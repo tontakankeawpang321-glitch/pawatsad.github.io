@@ -248,9 +248,9 @@
                             <a id="dlgPdf" href="#" target="_blank" class="flex-1 btn-gold px-6 py-3 rounded text-center flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-gold/20">
                                 <i class="fa-regular fa-file-pdf"></i> เอกสารกรมศิลป์ (PDF)
                             </a>
-                            <!-- ปุ่ม Wiki -->
-                            <a id="dlgWiki" href="#" target="_blank" class="flex-1 px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
-                                <i class="fa-brands fa-wikipedia-w"></i> ประวัติฉบับเต็ม
+                            <!-- ปุ่ม URL นอก (ฉบับการ์ตูนสั้น) -->
+                            <a id="dlgCartoon" href="#" target="_blank" class="flex-1 px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-film"></i> ฉบับการ์ตูนสั้น
                             </a>
                         </div>
                     </div>
@@ -285,7 +285,7 @@
         const dlgSummary = document.getElementById('dlgSummary');
         const dlgImg = document.getElementById('dlgImg');
         const dlgPdf = document.getElementById('dlgPdf');
-        const dlgWiki = document.getElementById('dlgWiki'); // ปุ่มประวัติเต็ม
+        const dlgCartoon = document.getElementById('dlgCartoon'); // เปลี่ยนจาก Wiki เป็น Cartoon
         const dlgClose = document.getElementById('dlgClose');
 
         let ALL = [];
@@ -324,7 +324,7 @@
             const t1 = await preloadImage(wikiThumbURL(it.name, 640, 'th'));
             if(t1) return t1;
             
-            // ลองค้นหาด้วยชื่ออังกฤษถ้ามี (สมมติว่าไม่มีใน CSV นี้ แต่เผื่อไว้)
+            // ลองค้นหาด้วยชื่ออังกฤษถ้ามี
             const t2src = await fetchSummaryThumb(it.name, 'th');
             const t2 = await preloadImage(t2src);
             return t2 || 'https://via.placeholder.com/600x800/0a0a0a/333333?text=No+Image';
@@ -361,7 +361,8 @@
                 region: header.indexOf('region'),
                 summary_th: header.indexOf('summary_th'),
                 image_url: header.indexOf('image_url'),
-                pdf_url: header.indexOf('pdf_url')
+                pdf_url: header.indexOf('pdf_url'),
+                url: header.indexOf('url') // ✅ เพิ่มการอ่านคอลัมน์ url
             };
             const out = [];
             for(let i=1;i<rows.length;i++){
@@ -374,7 +375,8 @@
                     region: r[idx.region] || '',
                     summary_th: r[idx.summary_th] || '',
                     image_url: r[idx.image_url] || '',
-                    pdf_url: r[idx.pdf_url] || ''
+                    pdf_url: r[idx.pdf_url] || '',
+                    url: r[idx.url] || '' // ✅ อ่านค่า url
                 };
                 if(obj.name) out.push(obj);
             }
@@ -402,12 +404,10 @@
             } else state.classList.add('hide');
 
             list.forEach((it, index) => {
-                // สร้าง Card Element
                 const card = document.createElement('div');
                 card.className = "card-wrapper group cursor-pointer h-64 md:h-80";
-                // Animation delay
                 card.style.animation = `fadePop 0.5s ease-out forwards ${index * 0.05}s`;
-                card.style.opacity = '0'; // เริ่มต้นซ่อนเพื่อรอ animate
+                card.style.opacity = '0';
 
                 card.innerHTML = `
                     <div class="card-inner w-full h-full relative">
@@ -427,13 +427,9 @@
                     </div>
                 `;
                 
-                // คลิกเพื่อเปิด Dialog
                 card.addEventListener('click', () => openDialog(it));
-                
-                // Lazy Load Image & Append
                 grid.appendChild(card);
                 
-                // หาภาพใส่ทีหลัง
                 const imgContainer = card.querySelector('.card-img-container');
                 resolveImageForItem(it).then(src => {
                     const img = document.createElement('img');
@@ -462,7 +458,7 @@
                 dlgImg.style.backgroundImage = `url('${src}')`;
             });
 
-            // Set Buttons
+            // Set PDF Button
             if(it.pdf_url) {
                 dlgPdf.href = it.pdf_url;
                 dlgPdf.classList.remove('hidden');
@@ -472,9 +468,14 @@
                 dlgPdf.classList.remove('flex');
             }
 
-            // ปุ่ม Wiki (ประวัติเต็มแบบ HTML) - ใช้ลิงก์ Wiki ภาษาไทย
-            const wikiUrl = `https://th.wikipedia.org/wiki/${it.name.replace(/\s+/g, '_')}`;
-            dlgWiki.href = wikiUrl;
+            // ✅ Set Cartoon URL Button (แทนปุ่ม Wiki เดิม)
+            if(it.url) {
+                dlgCartoon.href = it.url;
+                dlgCartoon.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                dlgCartoon.href = '#';
+                dlgCartoon.classList.add('opacity-50', 'pointer-events-none'); // จางลงถ้าไม่มีลิงก์
+            }
 
             dlg.showModal();
         }
@@ -520,7 +521,7 @@
 
         btnSearch.addEventListener('click', handleSearch);
         qInput.addEventListener('keyup', (e) => { if(e.key === 'Enter') handleSearch(); });
-        qInput.addEventListener('input', handleSearch); // ค้นหาทันทีที่พิมพ์
+        qInput.addEventListener('input', handleSearch);
         
         btnPrev.addEventListener('click', () => {
             if(CURRENT_PAGE > 1) { CURRENT_PAGE--; renderPage(); window.scrollTo({top:0, behavior:'smooth'}); }
