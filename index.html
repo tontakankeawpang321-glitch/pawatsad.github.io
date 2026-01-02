@@ -21,7 +21,7 @@
         }
 
         body {
-            font-family: 'Sarabun', sans-serif; /* ใช้ Sarabun เป็นหลักสำหรับอ่านไทยง่าย */
+            font-family: 'Sarabun', sans-serif;
             background-color: var(--bg-dark);
             background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.05) 1px, transparent 0);
             background-size: 30px 30px;
@@ -30,10 +30,9 @@
             min-height: 100vh;
         }
 
-        /* หัวข้อภาษาอังกฤษใช้ Cinzel เพื่อความขลัง */
         h1, .en-title { font-family: 'Cinzel', serif; }
 
-        /* ===== Card Styles (ยกมาจากไฟล์สวยงาม) ===== */
+        /* ===== Card Styles ===== */
         .card-wrapper {
             position: relative;
             transition: all 0.3s ease;
@@ -58,10 +57,10 @@
             opacity: 0.6;
         }
 
-        /* Hover Effects */
+        /* Hover Effects - ปรับสีให้สว่างขึ้นเป็นสีเหลืองทอง (#facc15) */
         .card-wrapper:hover .card-inner {
-            border-color: var(--accent-gold);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            border-color: #facc15;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
             transform: translateY(-4px);
         }
         .card-wrapper:hover .card-img {
@@ -70,8 +69,8 @@
             transform: scale(1.05);
         }
         .card-wrapper:hover h3 {
-            color: var(--accent-gold) !important;
-            text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+            color: #facc15 !important;
+            text-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
         }
 
         /* Animation */
@@ -116,7 +115,7 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
         }
 
-        /* ===== Custom Dialog Styling (Modern Dark) ===== */
+        /* ===== Custom Dialog Styling ===== */
         dialog {
             background: rgba(10, 10, 10, 0.95);
             border: 1px solid var(--accent-gold);
@@ -133,7 +132,6 @@
             backdrop-filter: blur(4px);
         }
         
-        /* Hide scrollbar for grid but allow scroll */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #1a1a1a; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -145,7 +143,7 @@
 <body class="flex flex-col items-center">
 
     <!-- Header -->
-    <header class="w-full max-w-[1600px] px-6 py-8 md:py-12 relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-[#d4af37]/20">
+    <header class="w-full max-w-[1600px] px-4 md:px-6 py-6 md:py-12 relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-[#d4af37]/20">
         <div class="text-center md:text-left">
             <h1 class="text-2xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-[#f4e4bc] via-[#d4af37] to-[#8b4513] mb-2 tracking-wide">
                 สารบบบุคคลสำคัญ
@@ -159,7 +157,7 @@
         <div class="relative w-full max-w-md group">
             <div class="search-glow flex items-center bg-gray-900/80 border border-[#d4af37]/30 rounded-full overflow-hidden transition-all duration-300">
                 <input id="q" type="search" 
-                    class="w-full pl-5 pr-12 py-3 bg-transparent text-[#f4e4bc] placeholder-gray-500 focus:outline-none font-serif text-sm md:text-base" 
+                    class="w-full pl-5 pr-12 py-2 md:py-3 bg-transparent text-[#f4e4bc] placeholder-gray-500 focus:outline-none font-serif text-sm md:text-base" 
                     placeholder="ค้นหานาม / ยุคสมัย / บทบาท..." autocomplete="off">
                 <button id="btnSearch" class="px-4 py-2 text-[#d4af37] hover:text-white transition-colors">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -168,7 +166,7 @@
         </div>
     </header>
 
-    <main class="w-full max-w-[1600px] px-4 md:px-6 py-8 flex-1 flex flex-col">
+    <main class="w-full max-w-[1600px] px-2 md:px-6 py-4 md:py-8 flex-1 flex flex-col">
         
         <!-- Loading / Error States -->
         <div id="state" class="text-center py-20 text-[#d4af37] animate-pulse">
@@ -178,18 +176,18 @@
             <i class="fa-solid fa-triangle-exclamation text-2xl mb-4"></i><br>ไม่สามารถเข้าถึงข้อมูล CSV ได้
         </div>
 
-        <!-- Grid Container -->
-        <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 min-h-[50vh]">
+        <!-- Grid Container: 3 คอลัมน์บนมือถือ (gap เล็ก), 4-6 บนจอใหญ่ -->
+        <div id="grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-6 min-h-[50vh]">
             <!-- Cards will be injected here -->
         </div>
 
         <!-- Pagination -->
-        <div id="pager" class="flex justify-center items-center gap-6 mt-12 mb-8 py-4 border-t border-[#d4af37]/20 hide">
-            <button id="btnPrev" class="btn-outline px-6 py-2 rounded-full text-sm font-serif uppercase tracking-widest disabled:opacity-30 hover:disabled:shadow-none hover:disabled:bg-transparent">
+        <div id="pager" class="flex justify-center items-center gap-4 md:gap-6 mt-8 md:mt-12 mb-8 py-4 border-t border-[#d4af37]/20 hide">
+            <button id="btnPrev" class="btn-outline px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-serif uppercase tracking-widest disabled:opacity-30 hover:disabled:shadow-none hover:disabled:bg-transparent">
                 <i class="fa-solid fa-chevron-left mr-2"></i> ก่อนหน้า
             </button>
-            <span id="pageInfo" class="text-[#f4e4bc] font-serif text-sm tracking-widest">หน้า 1 / 1</span>
-            <button id="btnNext" class="btn-outline px-6 py-2 rounded-full text-sm font-serif uppercase tracking-widest disabled:opacity-30 hover:disabled:shadow-none hover:disabled:bg-transparent">
+            <span id="pageInfo" class="text-[#f4e4bc] font-serif text-xs md:text-sm tracking-widest">หน้า 1 / 1</span>
+            <button id="btnNext" class="btn-outline px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-serif uppercase tracking-widest disabled:opacity-30 hover:disabled:shadow-none hover:disabled:bg-transparent">
                 ถัดไป <i class="fa-solid fa-chevron-right ml-2"></i>
             </button>
         </div>
@@ -207,13 +205,13 @@
             <!-- Dialog Header -->
             <div class="px-6 py-4 border-b border-[#d4af37]/30 bg-gradient-to-r from-[#1a1a1a] to-[#0a0a0a] flex justify-between items-start">
                 <div>
-                    <h2 id="dlgName" class="text-2xl md:text-3xl font-bold text-[#d4af37] font-[Cinzel] mb-1">ชื่อบุคคล</h2>
+                    <h2 id="dlgName" class="text-xl md:text-3xl font-bold text-[#d4af37] font-[Cinzel] mb-1">ชื่อบุคคล</h2>
                     <div class="text-xs md:text-sm text-gray-400 font-serif space-x-2">
                         <span id="dlgRole" class="px-2 py-0.5 border border-gray-700 rounded bg-gray-900">บทบาท</span>
                         <span class="text-[#d4af37]">•</span>
                         <span id="dlgEra">ยุคสมัย</span>
-                        <span class="text-[#d4af37]">•</span>
-                        <span id="dlgRegion">ภูมิภาค</span>
+                        <span class="text-[#d4af37] hide md:inline">•</span>
+                        <span id="dlgRegion" class="hide md:inline">ภูมิภาค</span>
                     </div>
                 </div>
                 <button id="dlgClose" class="text-gray-500 hover:text-[#d4af37] transition-colors text-xl p-2">
@@ -225,11 +223,11 @@
             <div class="p-0 overflow-y-auto custom-scroll">
                 <div class="flex flex-col md:flex-row">
                     <!-- Image Side -->
-                    <div class="w-full md:w-1/3 bg-black relative min-h-[250px] md:min-h-full">
+                    <div class="w-full md:w-1/3 bg-black relative min-h-[200px] md:min-h-full">
                         <div id="dlgImg" class="absolute inset-0 bg-cover bg-center opacity-80"></div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                         <div class="absolute bottom-4 left-4 right-4 text-center">
-                            <div id="dlgLife" class="text-sm text-gray-300 bg-black/60 backdrop-blur px-3 py-1 rounded-full inline-block border border-gray-700">
+                            <div id="dlgLife" class="text-xs md:text-sm text-gray-300 bg-black/60 backdrop-blur px-3 py-1 rounded-full inline-block border border-gray-700">
                                 ช่วงชีวิต
                             </div>
                         </div>
@@ -238,18 +236,16 @@
                     <!-- Content Side -->
                     <div class="w-full md:w-2/3 p-6 md:p-8 bg-[#0f0f0f]">
                         <h3 class="text-[#d4af37] font-bold mb-4 text-sm uppercase tracking-widest border-b border-[#d4af37]/20 pb-2">สังเขปประวัติ</h3>
-                        <p id="dlgSummary" class="text-gray-300 leading-relaxed font-light text-lg">
+                        <p id="dlgSummary" class="text-gray-300 leading-relaxed font-light text-base md:text-lg">
                             รายละเอียดเนื้อหา...
                         </p>
 
                         <!-- Actions Area -->
                         <div class="mt-8 flex flex-wrap gap-4 pt-6 border-t border-gray-800">
-                            <!-- ปุ่ม PDF -->
-                            <a id="dlgPdf" href="#" target="_blank" class="flex-1 btn-gold px-6 py-3 rounded text-center flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-gold/20">
-                                <i class="fa-regular fa-file-pdf"></i> เอกสารกรมศิลป์ (PDF)
+                            <a id="dlgPdf" href="#" target="_blank" class="flex-1 btn-gold px-4 md:px-6 py-3 rounded text-center flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-gold/20">
+                                <i class="fa-regular fa-file-pdf"></i> wikipidia (PDF)
                             </a>
-                            <!-- ปุ่ม URL นอก (ฉบับการ์ตูนสั้น) -->
-                            <a id="dlgCartoon" href="#" target="_blank" class="flex-1 px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
+                            <a id="dlgCartoon" href="#" target="_blank" class="flex-1 px-4 md:px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-film"></i> ฉบับการ์ตูนสั้น
                             </a>
                         </div>
@@ -285,12 +281,12 @@
         const dlgSummary = document.getElementById('dlgSummary');
         const dlgImg = document.getElementById('dlgImg');
         const dlgPdf = document.getElementById('dlgPdf');
-        const dlgCartoon = document.getElementById('dlgCartoon'); // เปลี่ยนจาก Wiki เป็น Cartoon
+        const dlgCartoon = document.getElementById('dlgCartoon');
         const dlgClose = document.getElementById('dlgClose');
 
         let ALL = [];
         let FILTERED = [];
-        const PAGE_SIZE = 12; // ปรับให้หารลงตัวกับ Grid 2,3,4,6 คอลัมน์
+        const PAGE_SIZE = 12; // 12 หารลงตัวทั้ง 3 และ 4
         let CURRENT_PAGE = 1;
 
         /* ===== Wikipedia Utils ===== */
@@ -324,7 +320,6 @@
             const t1 = await preloadImage(wikiThumbURL(it.name, 640, 'th'));
             if(t1) return t1;
             
-            // ลองค้นหาด้วยชื่ออังกฤษถ้ามี
             const t2src = await fetchSummaryThumb(it.name, 'th');
             const t2 = await preloadImage(t2src);
             return t2 || 'https://via.placeholder.com/600x800/0a0a0a/333333?text=No+Image';
@@ -352,7 +347,6 @@
         function toObjects(rows){
             if(!rows.length) return [];
             const header = rows[0].map(h => h.trim().toLowerCase());
-            // Mapping column headers
             const idx = {
                 name: header.indexOf('name'),
                 lifespan: header.indexOf('lifespan'),
@@ -362,7 +356,7 @@
                 summary_th: header.indexOf('summary_th'),
                 image_url: header.indexOf('image_url'),
                 pdf_url: header.indexOf('pdf_url'),
-                url: header.indexOf('url') // ✅ เพิ่มการอ่านคอลัมน์ url
+                url: header.indexOf('url')
             };
             const out = [];
             for(let i=1;i<rows.length;i++){
@@ -376,7 +370,7 @@
                     summary_th: r[idx.summary_th] || '',
                     image_url: r[idx.image_url] || '',
                     pdf_url: r[idx.pdf_url] || '',
-                    url: r[idx.url] || '' // ✅ อ่านค่า url
+                    url: r[idx.url] || ''
                 };
                 if(obj.name) out.push(obj);
             }
@@ -405,7 +399,8 @@
 
             list.forEach((it, index) => {
                 const card = document.createElement('div');
-                card.className = "card-wrapper group cursor-pointer h-64 md:h-80";
+                // ปรับความสูงการ์ด: h-56 สำหรับ mobile, h-80 สำหรับ tablet ขึ้นไป
+                card.className = "card-wrapper group cursor-pointer h-56 md:h-80";
                 card.style.animation = `fadePop 0.5s ease-out forwards ${index * 0.05}s`;
                 card.style.opacity = '0';
 
@@ -416,11 +411,13 @@
                         
                         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
                         
-                        <div class="absolute bottom-0 left-0 w-full p-4 text-center transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                            <h3 class="text-sm md:text-lg font-bold text-[#f4e4bc] uppercase tracking-wider font-[Cinzel] mb-1 line-clamp-1">
+                        <div class="absolute bottom-0 left-0 w-full p-2 text-center transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                            <!-- ปรับขนาด font: text-xs บน mobile -->
+                            <h3 class="text-xs md:text-lg font-bold text-[#f4e4bc] uppercase tracking-wider font-[Cinzel] mb-1 line-clamp-1">
                                 ${it.name}
                             </h3>
-                            <p class="text-[10px] md:text-xs text-[#d4af37] font-serif tracking-widest opacity-80 group-hover:opacity-100">
+                            <!-- ปรับขนาด font: text-[9px] บน mobile -->
+                            <p class="text-[9px] md:text-xs text-[#d4af37] font-serif tracking-widest opacity-80 group-hover:opacity-100 line-clamp-1">
                                 ${it.role || 'บุคคลสำคัญ'}
                             </p>
                         </div>
@@ -452,13 +449,11 @@
             dlgLife.textContent = it.lifespan || 'ไม่ระบุช่วงเวลา';
             dlgSummary.textContent = it.summary_th || 'ไม่มีข้อมูลสังเขป';
             
-            // Set Image
             dlgImg.style.backgroundImage = 'none';
             resolveImageForItem(it).then(src => {
                 dlgImg.style.backgroundImage = `url('${src}')`;
             });
 
-            // Set PDF Button
             if(it.pdf_url) {
                 dlgPdf.href = it.pdf_url;
                 dlgPdf.classList.remove('hidden');
@@ -468,13 +463,12 @@
                 dlgPdf.classList.remove('flex');
             }
 
-            // ✅ Set Cartoon URL Button (แทนปุ่ม Wiki เดิม)
             if(it.url) {
                 dlgCartoon.href = it.url;
                 dlgCartoon.classList.remove('opacity-50', 'pointer-events-none');
             } else {
                 dlgCartoon.href = '#';
-                dlgCartoon.classList.add('opacity-50', 'pointer-events-none'); // จางลงถ้าไม่มีลิงก์
+                dlgCartoon.classList.add('opacity-50', 'pointer-events-none');
             }
 
             dlg.showModal();
