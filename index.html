@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>สารบบบุคคลสำคัญ – หอจดหมายเหตุ (กรมศิลป์ PDF)</title>
+    <title>สารบัญบุคคลสำคัญ – หอจดหมายเหตุ (กรมศิลป์ PDF)</title>
     
     <!-- ✅ 1. ใช้ Tailwind CSS และ Google Fonts ตามแบบไฟล์สวยงาม -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -146,23 +146,33 @@
     <header class="w-full max-w-[1600px] px-4 md:px-6 py-6 md:py-12 relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-[#d4af37]/20">
         <div class="text-center md:text-left">
             <h1 class="text-2xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-[#f4e4bc] via-[#d4af37] to-[#8b4513] mb-2 tracking-wide">
-                สารบบบุคคลสำคัญ
+                สารบัญบุคคลสำคัญ
             </h1>
             <p class="text-[#d4af37] font-serif italic text-xs md:text-sm tracking-widest uppercase opacity-80">
                 ARCHIVE OF HISTORICAL FIGURES · กรมศิลปากร
             </p>
         </div>
 
-        <!-- Search Bar -->
-        <div class="relative w-full max-w-md group">
-            <div class="search-glow flex items-center bg-gray-900/80 border border-[#d4af37]/30 rounded-full overflow-hidden transition-all duration-300">
-                <input id="q" type="search" 
-                    class="w-full pl-5 pr-12 py-2 md:py-3 bg-transparent text-[#f4e4bc] placeholder-gray-500 focus:outline-none font-serif text-sm md:text-base" 
-                    placeholder="ค้นหานาม / ยุคสมัย / บทบาท..." autocomplete="off">
-                <button id="btnSearch" class="px-4 py-2 text-[#d4af37] hover:text-white transition-colors">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
+        <!-- Search Bar & World History Button -->
+        <div class="flex flex-col w-full max-w-md gap-3">
+            <div class="relative w-full group">
+                <div class="search-glow flex items-center bg-gray-900/80 border border-[#d4af37]/30 rounded-full overflow-hidden transition-all duration-300">
+                    <input id="q" type="search" 
+                        class="w-full pl-5 pr-12 py-2 md:py-3 bg-transparent text-[#f4e4bc] placeholder-gray-500 focus:outline-none font-serif text-sm md:text-base" 
+                        placeholder="ค้นหานาม / ยุคสมัย / บทบาท..." autocomplete="off">
+                    <button id="btnSearch" class="px-4 py-2 text-[#d4af37] hover:text-white transition-colors">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
             </div>
+            
+            <!-- ปุ่มอ่านประวัติศาสตร์โลก (New Cool Button) -->
+            <a href="https://tontakankeawpang321-glitch.github.io/pawatsad.github.io/wordhistory.html" target="_blank" 
+               class="self-center md:self-end px-5 py-1.5 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/5 hover:bg-[#d4af37]/20 text-[#d4af37] hover:text-[#f4e4bc] text-xs md:text-sm font-serif tracking-widest transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 group backdrop-blur-sm">
+                <i class="fa-solid fa-globe group-hover:rotate-180 transition-transform duration-700"></i>
+                <span>อ่านประวัติศาสตร์โลก</span>
+                <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-[10px] opacity-70"></i>
+            </a>
         </div>
     </header>
 
@@ -243,7 +253,7 @@
                         <!-- Actions Area -->
                         <div class="mt-8 flex flex-wrap gap-4 pt-6 border-t border-gray-800">
                             <a id="dlgPdf" href="#" target="_blank" class="flex-1 btn-gold px-4 md:px-6 py-3 rounded text-center flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-gold/20">
-                                <i class="fa-regular fa-file-pdf"></i> wikipidia (PDF)
+                                <i class="fa-regular fa-file-pdf"></i> เอกสารกรมศิลป์ (PDF)
                             </a>
                             <a id="dlgCartoon" href="#" target="_blank" class="flex-1 px-4 md:px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-film"></i> ฉบับการ์ตูนสั้น
