@@ -1,0 +1,386 @@
+<!DOCTYPE html> 
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ประวัติศาสตร์โลก – Timeline (Search + Pagination + WikiThumb)</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<!-- PapaParse (CSV Parser) -->
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+
+<style>
+  :root{
+    --bg:#f7fafc; --paper:#ffffff; --ink:#0f172a; --muted:#475569; --line:#e5e7eb;
+    --brand:#1d4ed8; --brand-2:#0ea5e9;
+    --radius:16px; --shadow:0 18px 40px -22px rgba(2,8,23,.25);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:"Sarabun",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink)}
+
+  header{
+    position:sticky; top:0; z-index:50;
+    background:linear-gradient(90deg, var(--brand), var(--brand-2));
+    color:#fff; padding:14px 16px; box-shadow:0 10px 30px -20px rgba(0,0,0,.4)
+  }
+  header .wrap{
+    max-width:980px; margin:auto; display:flex; gap:12px; align-items:center; flex-wrap:wrap
+  }
+  .title{font-weight:700; font-size:1.25rem; letter-spacing:.2px}
+  .search{
+    margin-left:auto; display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.15); padding:6px 10px; border-radius:999px; backdrop-filter: blur(6px); width:min(520px,100%)
+  }
+  .search input{border:none; outline:none; background:transparent; color:#fff; width:100%}
+  .search ::placeholder{color:rgba(255,255,255,.85)}
+
+  .layout{ max-width:980px; margin:12px auto; padding:0 16px; }
+  #timeline{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:14px
+  }
+  .event-card{
+    display:grid; grid-template-columns: 92px 1fr; gap:12px;
+    border:1px solid var(--line); border-radius:14px; padding:10px; margin:10px 0;
+    background:#fff; transition:transform .12s ease, box-shadow .12s ease; cursor:pointer
+  }
+  .event-card:hover{ transform: translateY(-2px); box-shadow:0 10px 30px -18px rgba(2,8,23,.18) }
+
+  /* กรอบรูปเล็กพอดี + ครอบภาพ */
+  .thumb{
+    width:100%; height:68px; border-radius:10px; background:#f1f5f9; border:1px solid var(--line);
+    object-fit:cover; display:block;
+  }
+
+  .meta{font-size:.84rem; color:var(--muted)}
+  .event-title{margin:2px 0; font-weight:700; color:#1d4ed8}
+  .tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+  .tag{font-size:.75rem; padding:4px 8px; border-radius:999px; background:#f8fafc; border:1px solid var(--line); color:#334155}
+
+  /* Pager */
+  .pager{
+    display:flex; justify-content:center; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap
+  }
+  .pager .btn{
+    font-size:.9rem; padding:6px 10px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; color:#0f172a; cursor:pointer
+  }
+  .pager .btn[disabled]{opacity:.5; cursor:not-allowed}
+  .pager .info{font-size:.9rem; color:#475569}
+
+  /* Modal */
+  dialog{
+    width:min(860px, 92vw); border:none; border-radius:18px; padding:0; overflow:hidden;
+    box-shadow:0 30px 70px -20px rgba(2,8,23,.45)
+  }
+  .modal-head{display:flex; gap:12px; align-items:center; padding:14px 16px; background:#0f172a; color:#fff}
+  .modal-head h3{margin:0; font-size:1.15rem}
+  .close-btn{margin-left:auto; background:#fff; color:#0f172a; border:none; border-radius:10px; padding:6px 10px; font-weight:700; cursor:pointer}
+
+  .modal-body{
+    display:grid; grid-template-columns: 240px 1fr; gap:16px; padding:16px; background:#fff
+  }
+  .modal-body img{width:100%; border-radius:14px; object-fit:cover; background:#f8fafc; border:1px solid var(--line); height:160px}
+  .modal-section h4{margin:.2rem 0 .4rem; color:#0f172a}
+  .modal-meta{font-size:.92rem; color:#475569}
+  .modal-summary{line-height:1.7; font-size:1rem; color:#0f172a; white-space:pre-wrap}
+
+  .modal-footer{
+    padding:12px 16px 16px; background:#fff; border-top:1px solid var(--line)
+  }
+  .btn-primary{
+    display:inline-flex; justify-content:center; align-items:center; gap:8px;
+    border:1px solid var(--line); background:#0ea5e9; color:#fff; border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:700; text-decoration:none; width:100%
+  }
+
+  /* Responsive rules for phones */
+  @media (max-width: 980px){
+    .event-card{grid-template-columns: 86px 1fr}
+  }
+  @media (max-width: 560px){
+    header .wrap{gap:8px}
+    .title{font-size:1.05rem}
+    .search{width:100%; order:2; margin-left:0; justify-content:space-between}
+    .event-card{grid-template-columns: 80px 1fr}
+    .thumb{height:64px}
+    .modal-body{grid-template-columns:1fr}
+    .modal-body img{height:180px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="title">🌍 ประวัติศาสตร์โลก – World History</div>
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="ค้นหา: ประเทศ / เหตุการณ์ / บุคคล / ค.ศ."/>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <section id="timeline" aria-label="timeline events"></section>
+  <div id="pager" class="pager" aria-label="pagination"></div>
+</div>
+
+<!-- Modal รายละเอียด -->
+<dialog id="detailModal">
+  <div class="modal-head">
+    <h3 id="mTitle">Title</h3>
+    <button class="close-btn" onclick="modal.close()">ปิด</button>
+  </div>
+
+  <div class="modal-body">
+    <img id="mImg" alt="">
+    <div class="modal-section">
+      <div class="modal-meta" id="mMeta"></div>
+      <h4>เรื่องราวย่อ</h4>
+      <div id="mSummary" class="modal-summary"></div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <a class="btn-primary" id="mReadFull" target="_blank" rel="noopener">อ่านข้อมูลเต็ม</a>
+  </div>
+</dialog>
+
+<script>
+/* ====== 1) กำหนดแหล่งข้อมูล CSV ====== */
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHCUSbSUka5matIOmUxIuaWAYcHtCa8rNcfbWTQcpTL2zIH2PYKFOwQFOZtEo-Js52SMzRDwaW1k5u/pub?output=csv"; // <<<<< ใส่ URL CSV ของคุณที่นี่
+// สคีมาที่ใช้จริง: id,title,year,era,continent,country,image,summary,category,source_url
+
+/* ====== 1.1 Demo CSV (เมื่อยังไม่ใส่ URL) ====== */
+const DEMO_CSV = `id,title,year,era,continent,country,image,summary,category,source_url
+1,การสร้างพีระมิดกิซา,-2560,โบราณ,แอฟริกา,อียิปต์,https://upload.wikimedia.org/wikipedia/commons/e/e3/Kheops-Pyramid.jpg,พีระมิดยิ่งใหญ่เป็นสุสานของฟาโรห์และแสดงเทคโนโลยีสถาปัตยกรรมขั้นสูง,สถาปัตย์,https://th.wikipedia.org/wiki/%E0%B8%9E%E0%B8%B5%E0%B8%A3%E0%B8%B0%E0%B8%A1%E0%B8%B4%E0%B8%94%E0%B9%83%E0%B8%AB%E0%B8%8D%E0%B9%88%E0%B8%81%E0%B8%B4%E0%B8%8B%E0%B8%B2
+2,การล่มสลายโรมันตะวันตก,476,กลาง,ยุโรป,อิตาลี,https://upload.wikimedia.org/wikipedia/commons/9/97/RomanEmpire_117AD.png,จุดสิ้นสุดจักรวรรดิโรมันตะวันตก ถือเป็นต้นยุคกลางยุโรป,สงคราม,https://th.wikipedia.org/wiki/%E0%B8%88%E0%B8%B1%E0%B8%81%E0%B8%A3%E0%B8%A7%E0%B8%A3%E0%B8%94%E0%B8%B4%E0%B9%82%E0%B8%A3%E0%B8%A1%E0%B8%B1%E0%B8%99
+3,โคลัมบัสพบโลกใหม่,1492,เรอเนสซองส์,อเมริกาเหนือ,บาฮามาส,https://upload.wikimedia.org/wikipedia/commons/0/07/Columbus_Taking_Possession.jpg,การสำรวจนำไปสู่การล่าอาณานิคมและการเชื่อมโลกเก่า-โลกใหม่,สำรวจ,https://th.wikipedia.org/wiki/%E0%B9%82%E0%B8%84%E0%B8%A5%E0%B8%B1%E0%B8%A1%E0%B8%9A%E0%B8%B1%E0%B8%AA
+4,การปฏิวัติอุตสาหกรรม,1760,สมัยใหม่,ยุโรป,สหราชอาณาจักร,https://upload.wikimedia.org/wikipedia/commons/3/3a/Powerloom_weaving_mill.jpg,เปลี่ยนผ่านสู่การผลิตเครื่องจักร ยกระดับเศรษฐกิจและเมืองอุตสาหกรรม,เศรษฐกิจ,https://th.wikipedia.org/wiki/%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%8F%E0%B8%B4%E0%B8%A7%E0%B8%B1%E0%B8%95%E0%B8%B4%E0%B8%AD%E0%B8%B8%E0%B8%95%E0%B8%AA%E0%B8%B2%E0%B8%AB%E0%B8%81%E0%B8%A3%E0%B8%A3%E0%B8%A1
+5,การประกาศเอกราชสหรัฐฯ,1776,สมัยใหม่,อเมริกาเหนือ,สหรัฐอเมริกา,https://upload.wikimedia.org/wikipedia/commons/1/1f/Declaration_independence.jpg,เอกสารหลักปรัชญาการเมืองและสิทธิมนุษยชนยุคใหม่,การเมือง,https://th.wikipedia.org/wiki/%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%81%E0%B8%B2%E0%B8%A8%E0%B9%80%E0%B8%AD%E0%B8%81%E0%B8%A3%E0%B8%B2%E0%B8%8A%E0%B8%AA%E0%B8%AB%E0%B8%A3%E0%B8%B1%E0%B8%90
+6,สงครามโลกครั้งที่ 2,1939,ร่วมสมัย,ยุโรป,หลายประเทศ,https://upload.wikimedia.org/wikipedia/commons/1/1e/WWII_collage.png,ความขัดแย้งระดับโลกที่เปลี่ยนโครงสร้างการเมือง เศรษฐกิจ และสังคมโลก,สงคราม,https://th.wikipedia.org/wiki/%E0%B8%AA%E0%B8%87%E0%B8%84%E0%B8%A3%E0%B8%B2%E0%B8%A1%E0%B9%82%E0%B8%A5%E0%B8%81%E0%B8%84%E0%B8%A3%E0%B8%B1%E0%B9%89%E0%B8%87%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%AA%E0%B8%AD%E0%B8%87
+7,การปฏิวัติฝรั่งเศส,1789,สมัยใหม่,ยุโรป,ฝรั่งเศส,https://upload.wikimedia.org/wikipedia/commons/1/1f/Prise_de_la_Bastille.jpg,หล่อหลอมค่านิยมเสรีภาพ ความเสมอภาค ภราดรภาพ และเปลี่ยนระบอบการเมืองยุโรป,การเมือง,https://th.wikipedia.org/wiki/%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%9B%E0%B8%8F%E0%B8%B4%E0%B8%A7%E0%B8%B1%E0%B8%95%E0%B8%B4%E0%B8%9D%E0%B8%A3%E0%B8%B1%E0%B8%87%E0%B9%80%E0%B8%A8%E0%B8%AA
+8,การสถาปนาสยามสมัยรัตนโกสินทร์,1782,สมัยใหม่,เอเชีย,ไทย,https://upload.wikimedia.org/wikipedia/commons/9/96/Grand_Palace_Bangkok.jpg,จุดเปลี่ยนประวัติศาสตร์ไทยสู่กรุงรัตนโกสินทร์และการปฏิรูปประเทศสมัยใหม่,เอเชียตะวันออกเฉียงใต้,https://th.wikipedia.org/wiki/%E0%B8%A3%E0%B8%B1%E0%B8%95%E0%B8%99%E0%B9%82%E0%B8%81%E0%B8%AA%E0%B8%B4%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B9%8C
+`;
+
+let RAW = [];
+let CURRENT = []; // หลังกรอง
+let page = 1;
+const pageSize = 20;
+
+/* ====== ขนาด thumbnail ต้องการ (พอดีกรอบ) ====== */
+const THUMB_WIDTH = 240; // px
+
+/* ====== Placeholder data URI เมื่อรูปโหลดไม่ได้ ====== */
+const PLACEHOLDER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160">
+    <rect width="100%" height="100%" fill="#e5e7eb"/>
+    <g fill="#94a3b8" font-family="sans-serif" font-size="14">
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">no image</text>
+    </g>
+  </svg>`);
+
+/* ====== 2) โหลด CSV ====== */
+async function loadCSV(){
+  if(SHEET_CSV_URL){
+    return new Promise((resolve, reject)=>{
+      Papa.parse(SHEET_CSV_URL, {
+        download:true, header:true, skipEmptyLines:true,
+        complete: (res)=> resolve(res.data),
+        error: reject
+      });
+    });
+  }else{
+    return new Promise((resolve)=> {
+      const res = Papa.parse(DEMO_CSV, {header:true, skipEmptyLines:true});
+      resolve(res.data);
+    });
+  }
+}
+
+/* ====== 3) แปลง URL Wikipedia → thumbnail ขนาดเล็ก ====== */
+function toWikiThumb(url, width = THUMB_WIDTH){
+  if(!url) return url;
+  try{
+    const u = new URL(url);
+    if(u.hostname !== 'upload.wikimedia.org') return url; // ไม่ใช่ Wikimedia ปล่อยผ่าน
+    const parts = u.pathname.split('/');
+    const idx = parts.indexOf('commons');
+    if(idx === -1) return url;
+    if(parts[idx+1] === 'thumb'){
+      const fileName = parts[parts.length-1].replace(/^\d+px-/, '');
+      parts[parts.length-1] = `${width}px-${fileName}`;
+      u.pathname = parts.join('/');
+      return u.toString();
+    }else{
+      const fileName = parts[parts.length-1];
+      const head = parts.slice(0, idx+1);
+      const tail = parts.slice(idx+1);
+      const newPath = [...head, 'thumb', ...tail, `${width}px-${fileName}`].join('/');
+      u.pathname = newPath;
+      return u.toString();
+    }
+  }catch{
+    return url;
+  }
+}
+
+/* ====== 4) ค้นหา ====== */
+function applyFilters(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  CURRENT = RAW.filter(r=>{
+    const hay = `${r.title||""} ${r.summary||""} ${r.country||""} ${r.continent||""} ${r.era||""} ${r.category||""} ${r.year||""}`.toLowerCase();
+    return q==="" ? true : hay.includes(q);
+  });
+  page = 1;          // รีเซ็ตไปหน้าแรกเมื่อมีการค้นหาใหม่
+  renderList();
+}
+
+/* ====== 5) เรนเดอร์ไทม์ไลน์ + เพจ ====== */
+function renderList(){
+  const host = document.getElementById('timeline');
+  host.innerHTML = "";
+
+  if(CURRENT.length===0){
+    host.innerHTML = `<div style="padding:16px;color:#64748b">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>`;
+    document.getElementById('pager').innerHTML = "";
+    return;
+  }
+
+  // เรียงตามปี (น้อย -> มาก)
+  const rows = [...CURRENT].sort((a,b)=> Number(a.year)-Number(b.year));
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  page = Math.min(page, totalPages);
+
+  const start = (page-1)*pageSize;
+  const end   = start + pageSize;
+  const slice = rows.slice(start, end);
+
+  slice.forEach(r=>{
+    const card = document.createElement('article');
+    card.className = 'event-card';
+
+    const imgUrl = toWikiThumb(r.image || '') || r.image || PLACEHOLDER;
+
+    const img = document.createElement('img');
+    img.className = 'thumb';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.setAttribute('referrerpolicy','no-referrer');
+    img.alt = r.title || "";
+    img.src = imgUrl || PLACEHOLDER;
+    img.onerror = ()=>{ img.src = PLACEHOLDER; };
+
+    const right = document.createElement('div');
+    right.innerHTML = `
+      <div class="meta">${r.year||""} · ${r.country||""} ${r.continent?`(${r.continent})`:""}</div>
+      <div class="event-title">${r.title||""}</div>
+      <div class="meta">${(r.summary||"").slice(0,110)}${(r.summary||"").length>110?"…":""}</div>
+      <div class="tags">
+        ${r.era? `<span class="tag">ยุค: ${r.era}</span>`:""}
+      </div>
+    `;
+
+    card.append(img, right);
+    card.addEventListener('click', ()=> openModal(r));
+    host.append(card);
+  });
+
+  renderPager(totalPages, rows.length);
+}
+
+function renderPager(totalPages, totalItems){
+  const pager = document.getElementById('pager');
+  pager.innerHTML = "";
+
+  const btnPrev = document.createElement('button');
+  btnPrev.className = 'btn';
+  btnPrev.textContent = 'ย้อนกลับ';
+  btnPrev.disabled = (page<=1);
+  btnPrev.onclick = ()=>{ page = Math.max(1, page-1); renderList(); };
+
+  const info = document.createElement('span');
+  const startItem = (page-1)*pageSize + 1;
+  const endItem = Math.min(page*pageSize, totalItems);
+  info.className = 'info';
+  info.textContent = `${startItem}-${endItem} / ${totalItems}`;
+
+  const btnNext = document.createElement('button');
+  btnNext.className = 'btn';
+  btnNext.textContent = 'ถัดไป';
+  btnNext.disabled = (page>=totalPages);
+  btnNext.onclick = ()=>{ page = Math.min(totalPages, page+1); renderList(); };
+
+  pager.append(btnPrev, info, btnNext);
+}
+
+/* ====== 6) โมดัลรายละเอียด + ล็อกสกรอล ====== */
+const modal = document.getElementById('detailModal');
+
+function lockScroll(){
+  const y = window.scrollY || document.documentElement.scrollTop;
+  document.body.dataset.scrollY = y;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${y}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+}
+function unlockScroll(){
+  const y = parseInt(document.body.dataset.scrollY || '0', 10);
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  delete document.body.dataset.scrollY;
+  window.scrollTo(0, y);
+}
+
+function openModal(r){
+  const mImg = document.getElementById('mImg');
+  const fullOrThumb = toWikiThumb(r.image || '', 640) || r.image || PLACEHOLDER;
+  mImg.setAttribute('referrerpolicy','no-referrer');
+  mImg.alt = r.title||"";
+  mImg.src = fullOrThumb || PLACEHOLDER;
+  mImg.onerror = ()=>{ mImg.src = PLACEHOLDER; };
+
+  document.getElementById('mTitle').textContent = r.title||"";
+  document.getElementById('mMeta').textContent = `${r.year||""} · ${r.country||""} ${r.continent?`(${r.continent})`:""} · ยุค ${r.era||""}`;
+  document.getElementById('mSummary').textContent = r.summary||"";
+
+  const readBtn = document.getElementById('mReadFull');
+  if(r.source_url){
+    readBtn.href = r.source_url;
+    readBtn.style.display = 'inline-flex';
+  }else{
+    readBtn.removeAttribute('href');
+    readBtn.style.display = 'none';
+  }
+
+  lockScroll();
+  modal.showModal();
+}
+modal.addEventListener('close', unlockScroll);
+
+/* ====== 7) ควบคุมค้นหาแบบ Realtime ====== */
+document.getElementById('q').addEventListener('input', applyFilters);
+
+/* ====== 8) เริ่มต้น ====== */
+(async function init(){
+  RAW = await loadCSV();
+  RAW = RAW.map(r=>({
+    id: r.id, title: r.title, year: r.year, era: r.era,
+    continent: r.continent, country: r.country || "",
+    image: r.image, summary: r.summary, category: r.category, source_url: r.source_url
+  }));
+  applyFilters();
+})();
+</script>
+</body>
+</html>
