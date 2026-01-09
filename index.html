@@ -138,6 +138,53 @@
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
 
         .hide { display: none !important; }
+
+        /* ===== Video Overlay ===== */
+        #video-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #video-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .video-container {
+            width: 100%;
+            height: 100%;
+            max-width: 500px; /* Max width for vertical/portrait feel on desktop */
+            position: relative;
+            background: #000;
+        }
+        .close-video-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #d4af37;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .close-video-btn:hover {
+            background: #d4af37;
+            color: #000;
+        }
     </style>
 </head>
 <body class="flex flex-col items-center">
@@ -166,7 +213,7 @@
                 </div>
             </div>
             
-            <!-- ปุ่มอ่านประวัติศาสตร์โลก (New Cool Button) -->
+            <!-- ปุ่มอ่านประวัติศาสตร์โลก -->
             <a href="https://tontakankeawpang321-glitch.github.io/pawatsad.github.io/wordhistory.html" target="_blank" 
                class="self-center md:self-end px-5 py-1.5 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/5 hover:bg-[#d4af37]/20 text-[#d4af37] hover:text-[#f4e4bc] text-xs md:text-sm font-serif tracking-widest transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 group backdrop-blur-sm">
                 <i class="fa-solid fa-globe group-hover:rotate-180 transition-transform duration-700"></i>
@@ -186,7 +233,7 @@
             <i class="fa-solid fa-triangle-exclamation text-2xl mb-4"></i><br>ไม่สามารถเข้าถึงข้อมูล CSV ได้
         </div>
 
-        <!-- Grid Container: 3 คอลัมน์บนมือถือ (gap เล็ก), 4-6 บนจอใหญ่ -->
+        <!-- Grid Container -->
         <div id="grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-6 min-h-[50vh]">
             <!-- Cards will be injected here -->
         </div>
@@ -252,18 +299,36 @@
 
                         <!-- Actions Area -->
                         <div class="mt-8 flex flex-wrap gap-4 pt-6 border-t border-gray-800">
-                            <a id="dlgPdf" href="#" target="_blank" class="flex-1 btn-gold px-4 md:px-6 py-3 rounded text-center flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-gold/20">
-                                <i class="fa-regular fa-file-pdf"></i> ฉบับ วิกีพิเดีย
+                            <!-- 1. ปุ่ม PDF -->
+                            <a id="dlgPdf" href="#" target="_blank" class="flex-1 px-4 md:px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-file-pdf"></i> ฉบับ วิกิพีเดีย
                             </a>
-                            <a id="dlgCartoon" href="#" target="_blank" class="flex-1 px-4 md:px-6 py-3 rounded text-center border border-gray-600 text-gray-300 hover:text-white hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all text-sm flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-film"></i> ฉบับการ์ตูนสั้น
+
+                            <!-- 2. ปุ่ม การ์ตูน (สลับมาอยู่ตรงกลาง) -->
+                            <a id="dlgCartoon" href="#" target="_blank" class="flex-1 btn-gold px-4 md:px-6 py-3 rounded text-center flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-gold/20">
+                                <i class="fa-solid fa-clapperboard"></i> ฉบับการ์ตูนสั้น
                             </a>
+
+                            <!-- 3. ปุ่ม YouTube (สลับมาอยู่ท้ายสุด ให้เป็น "ข้างๆ" การ์ตูนสั้น) -->
+                            <button id="dlgYoutube" class="flex-1 px-4 md:px-6 py-3 rounded text-center border border-red-900/50 bg-red-900/10 text-red-400 hover:text-white hover:border-red-500 hover:bg-red-900/40 transition-all text-sm flex items-center justify-center gap-2">
+                                <i class="fa-brands fa-youtube"></i> ฉบับวิดีโอเล่าเรื่อง
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </dialog>
+
+    <!-- ===== Video Overlay ===== -->
+    <div id="video-overlay">
+        <button id="closeVideoBtn" class="close-video-btn">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="video-container">
+            <iframe id="youtubeIframe" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
 
     <!-- ===== LOGIC SCRIPT ===== -->
     <script>
@@ -292,11 +357,17 @@
         const dlgImg = document.getElementById('dlgImg');
         const dlgPdf = document.getElementById('dlgPdf');
         const dlgCartoon = document.getElementById('dlgCartoon');
+        const dlgYoutube = document.getElementById('dlgYoutube');
         const dlgClose = document.getElementById('dlgClose');
+
+        /* Video Overlay Refs */
+        const videoOverlay = document.getElementById('video-overlay');
+        const closeVideoBtn = document.getElementById('closeVideoBtn');
+        const youtubeIframe = document.getElementById('youtubeIframe');
 
         let ALL = [];
         let FILTERED = [];
-        const PAGE_SIZE = 12; // 12 หารลงตัวทั้ง 3 และ 4
+        const PAGE_SIZE = 12;
         let CURRENT_PAGE = 1;
 
         /* ===== Wikipedia Utils ===== */
@@ -357,6 +428,13 @@
         function toObjects(rows){
             if(!rows.length) return [];
             const header = rows[0].map(h => h.trim().toLowerCase());
+            
+            // หา index ของ urlyoutube หรือ urlyoutbe
+            let ytIndex = header.indexOf('urlyoutube');
+            if (ytIndex === -1) {
+                ytIndex = header.indexOf('urlyoutbe');
+            }
+
             const idx = {
                 name: header.indexOf('name'),
                 lifespan: header.indexOf('lifespan'),
@@ -366,7 +444,8 @@
                 summary_th: header.indexOf('summary_th'),
                 image_url: header.indexOf('image_url'),
                 pdf_url: header.indexOf('pdf_url'),
-                url: header.indexOf('url')
+                url: header.indexOf('url'),
+                urlyoutube: ytIndex
             };
             const out = [];
             for(let i=1;i<rows.length;i++){
@@ -380,7 +459,8 @@
                     summary_th: r[idx.summary_th] || '',
                     image_url: r[idx.image_url] || '',
                     pdf_url: r[idx.pdf_url] || '',
-                    url: r[idx.url] || ''
+                    url: r[idx.url] || '',
+                    urlyoutube: r[idx.urlyoutube] || '' 
                 };
                 if(obj.name) out.push(obj);
             }
@@ -409,7 +489,6 @@
 
             list.forEach((it, index) => {
                 const card = document.createElement('div');
-                // ปรับความสูงการ์ด: h-56 สำหรับ mobile, h-80 สำหรับ tablet ขึ้นไป
                 card.className = "card-wrapper group cursor-pointer h-56 md:h-80";
                 card.style.animation = `fadePop 0.5s ease-out forwards ${index * 0.05}s`;
                 card.style.opacity = '0';
@@ -422,11 +501,9 @@
                         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
                         
                         <div class="absolute bottom-0 left-0 w-full p-2 text-center transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                            <!-- ปรับขนาด font: text-xs บน mobile -->
                             <h3 class="text-xs md:text-lg font-bold text-[#f4e4bc] uppercase tracking-wider font-[Cinzel] mb-1 line-clamp-1">
                                 ${it.name}
                             </h3>
-                            <!-- ปรับขนาด font: text-[9px] บน mobile -->
                             <p class="text-[9px] md:text-xs text-[#d4af37] font-serif tracking-widest opacity-80 group-hover:opacity-100 line-clamp-1">
                                 ${it.role || 'บุคคลสำคัญ'}
                             </p>
@@ -450,6 +527,14 @@
             updatePager();
         }
 
+        /* ===== YouTube Helper ===== */
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
         /* ===== Dialog Functions ===== */
         function openDialog(it){
             dlgName.textContent = it.name;
@@ -464,6 +549,7 @@
                 dlgImg.style.backgroundImage = `url('${src}')`;
             });
 
+            // PDF Button
             if(it.pdf_url) {
                 dlgPdf.href = it.pdf_url;
                 dlgPdf.classList.remove('hidden');
@@ -473,12 +559,30 @@
                 dlgPdf.classList.remove('flex');
             }
 
+            // Cartoon Button (URL)
             if(it.url) {
                 dlgCartoon.href = it.url;
                 dlgCartoon.classList.remove('opacity-50', 'pointer-events-none');
             } else {
                 dlgCartoon.href = '#';
                 dlgCartoon.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            // YouTube Button Logic (Updated: Show disabled instead of hiding)
+            const ytId = getYoutubeId(it.urlyoutube);
+            
+            // ล้าง class เดิมก่อนเพื่อความชัวร์
+            dlgYoutube.classList.remove('hidden', 'opacity-50', 'pointer-events-none', 'flex'); 
+            
+            if(ytId) {
+                dlgYoutube.classList.add('flex'); // แสดงปกติ
+                dlgYoutube.onclick = () => {
+                    youtubeIframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&playsinline=1`;
+                    videoOverlay.classList.add('active');
+                };
+            } else {
+                dlgYoutube.classList.add('flex', 'opacity-50', 'pointer-events-none'); // แสดงแต่จางและกดไม่ได้
+                dlgYoutube.onclick = null;
             }
 
             dlg.showModal();
@@ -490,6 +594,21 @@
             if(e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
                 dlg.close();
             }
+        });
+
+        /* ===== Video Overlay Events ===== */
+        function closeVideo() {
+            videoOverlay.classList.remove('active');
+            setTimeout(() => {
+                youtubeIframe.src = ""; // Stop video by clearing src
+            }, 300); // Wait for fade out
+        }
+
+        closeVideoBtn.addEventListener('click', closeVideo);
+        
+        // คลิกพื้นหลังสีดำเพื่อปิด
+        videoOverlay.addEventListener('click', (e) => {
+            if(e.target === videoOverlay) closeVideo();
         });
 
         /* ===== Main Logic ===== */
