@@ -866,7 +866,7 @@
 
         let ALL = [];
         let FILTERED = [];
-        const PAGE_SIZE = 24; 
+        const PAGE_SIZE = 10; 
         let CURRENT_PAGE = 1;
         let currentPersonObj = null;
 
@@ -1323,17 +1323,47 @@
         });
 
         async function loadCSV(){
-            try {
-                const res = await fetch(CSV_URL);
-                if(!res.ok) throw new Error('Network error');
-                const text = await res.text();
-                ALL = toObjects(parseCSV(text));
-                FILTERED = ALL.slice();
-                renderPage();
-            } catch(e) {
-                console.error(e);
-                state.classList.add('hide');
-                errorBox.classList.remove('hide');
+            const CACHE_KEY = 'archive_csv_data';
+            const CACHE_TIME = 'archive_csv_time';
+            const CACHE_LIFETIME = 24 * 60 * 60 * 1000; // แคชมีอายุ 24 ชั่วโมง
+
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const cachedTime = localStorage.getItem(CACHE_TIME);
+            const now = Date.now();
+
+            // 1. โหลดข้อมูลจากแคชมาแสดงผลทันทีก่อน (ถ้ามี) ทำให้เข้าแอปครั้งต่อไปเร็วขึ้นมาก
+            if (cachedData) {
+                try {
+                    ALL = JSON.parse(cachedData);
+                    FILTERED = ALL.slice();
+                    renderPage();
+                } catch(e) {
+                    console.error("Cache read error", e);
+                }
+            }
+
+            // 2. ดึงข้อมูลใหม่ถ้าแคชหมดอายุ หรือยังไม่มีแคชเลย
+            if (!cachedData || !cachedTime || (now - parseInt(cachedTime)) > CACHE_LIFETIME) {
+                try {
+                    const res = await fetch(CSV_URL);
+                    if(!res.ok) throw new Error('Network error');
+                    const text = await res.text();
+                    ALL = toObjects(parseCSV(text));
+                    FILTERED = ALL.slice();
+                    
+                    // บันทึกทับลง Local Storage
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(ALL));
+                    localStorage.setItem(CACHE_TIME, now.toString());
+                    
+                    renderPage();
+                } catch(e) {
+                    console.error("Fetch error", e);
+                    // กรณีไม่มีทั้งเน็ตและไม่มีแคช
+                    if (!cachedData) {
+                        state.classList.add('hide');
+                        errorBox.classList.remove('hide');
+                    }
+                }
             }
         }
 
