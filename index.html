@@ -46,7 +46,6 @@
             overflow: hidden;
             border-radius: 2px;
             transition: all 0.3s ease;
-            height: 100%;
             position: relative;
         }
 
@@ -54,8 +53,8 @@
             filter: grayscale(100%) contrast(1.1);
             transition: all 0.4s ease;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto; /* ✅ ปรับเป็น auto ให้กรอบรัดพอดีรูป */
+            display: block; /* ✅ ป้องกันขอบล่างเหลือช่องว่าง */
             opacity: 0.5;
         }
 
@@ -149,10 +148,19 @@
             backdrop-filter: blur(4px);
         }
         
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #1a1a1a; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
+
+        /* ✅ Hide scrollbar but allow scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
 
         .hide { display: none !important; }
 
@@ -160,7 +168,7 @@
         #video-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
+            background: rgba(0,0,0,0.95);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -169,6 +177,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
         }
         #video-overlay.active {
             opacity: 1;
@@ -177,9 +186,12 @@
         .video-container {
             width: 100%;
             height: 100%;
-            max-width: 500px;
+            max-width: 800px;
+            max-height: 450px;
             position: relative;
             background: #000;
+            border: 1px solid var(--accent-gold-dim);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
         }
         .close-video-btn {
             position: absolute;
@@ -201,10 +213,10 @@
         .close-video-btn:hover {
             background: #d4af37;
             color: #000;
+            transform: scale(1.1);
         }
     </style>
 </head>
-<!-- ✅ เพิ่ม pb-20 เพื่อไม่ให้เนื้อหาถูก Bottom Nav บัง -->
 <body class="flex flex-col items-center pb-20 md:pb-24">
 
     <!-- Header -->
@@ -218,7 +230,7 @@
             </p>
         </div>
 
-        <!-- Search Bar & World History Button -->
+        <!-- Search Bar -->
         <div class="flex flex-col w-full max-w-md gap-3">
             <div class="relative w-full group">
                 <div class="search-glow flex items-center bg-gray-900/80 border border-[#d4af37]/30 rounded-full overflow-hidden transition-all duration-300">
@@ -230,19 +242,35 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- ปุ่มอ่านประวัติศาสตร์โลก -->
-            <a href="https://tontakankeawpang321-glitch.github.io/pawatsad.github.io/wordhistory.html" target="_blank" 
-               class="self-center md:self-end px-4 py-1 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/5 hover:bg-[#d4af37]/20 text-[#d4af37] hover:text-[#f4e4bc] text-[10px] md:text-xs font-serif tracking-widest transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-2 group backdrop-blur-sm">
-                <i class="fa-solid fa-globe group-hover:rotate-180 transition-transform duration-700"></i>
-                <span>อ่านประวัติศาสตร์โลก</span>
-                <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-[9px] opacity-70"></i>
-            </a>
         </div>
     </header>
 
     <main class="w-full max-w-[1600px] px-2 md:px-6 py-4 flex-1 flex flex-col">
         
+        <!-- ✅ ส่วนแสดงวิดีโอแนะนำ -->
+        <div class="w-full mb-6 mt-2">
+            <div class="flex items-center gap-2 mb-4 px-2">
+                <i class="fa-brands fa-youtube text-[#d4af37] text-xl"></i>
+                <h2 class="text-[#f4e4bc] font-bold text-sm md:text-base font-serif tracking-wide">วิดีโอแนะนำ</h2>
+            </div>
+            
+            <!-- Slider Container (ไม่มี Scrollbar) -->
+            <div id="playlistSlider" class="flex overflow-x-auto gap-3 md:gap-4 pb-2 no-scrollbar snap-x snap-mandatory px-2">
+                <!-- ข้อมูลจะถูกแทรกที่นี่ผ่าน JavaScript -->
+                <div class="text-gray-500 text-sm animate-pulse flex items-center gap-2">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังโหลดวิดีโอ...
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ หัวข้อประวัติบุคคล ก่อนเริ่มตาราง -->
+        <div class="w-full border-t border-[#d4af37]/10 pt-6 mb-4 px-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-users text-[#d4af37] text-xl"></i>
+                <h2 class="text-[#f4e4bc] font-bold text-sm md:text-base font-serif tracking-wide">ประวัติบุคคล</h2>
+            </div>
+        </div>
+
         <!-- Loading / Error States -->
         <div id="state" class="text-center py-20 text-[#d4af37] animate-pulse">
             <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-4"></i><br>กำลังเปิดผนึกบันทึก...
@@ -252,7 +280,8 @@
         </div>
 
         <!-- Grid Container -->
-        <div id="grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 md:gap-4 min-h-[50vh]">
+        <!-- ✅ เพิ่ม items-start เพื่อให้การ์ดแต่ละใบมีความสูงตามรูปจริง ไม่ถูกดึงให้เท่ากัน -->
+        <div id="grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 md:gap-4 min-h-[50vh] items-start">
             <!-- Cards will be injected here -->
         </div>
 
@@ -295,7 +324,6 @@
                 <div class="flex-1 pr-4">
                     <div class="flex items-center gap-3 mb-1">
                         <h2 id="dlgName" class="text-xl md:text-3xl font-bold text-[#d4af37] font-[Cinzel]">ชื่อบุคคล</h2>
-                        <!-- ✅ ปุ่มรูปหัวใจสำหรับเพิ่มรายการโปรด -->
                         <button id="btnToggleFav" class="text-xl text-gray-500 hover:text-red-500 hover:scale-110 transition-all focus:outline-none" title="เพิ่มลงรายการโปรด">
                             <i class="fa-regular fa-heart"></i>
                         </button>
@@ -318,7 +346,8 @@
                 <div class="flex flex-col md:flex-row">
                     <!-- Image Side -->
                     <div class="w-full md:w-1/3 bg-black relative min-h-[200px] md:min-h-full">
-                        <div id="dlgImg" class="absolute inset-0 bg-cover bg-top opacity-80"></div>
+                        <!-- ✅ ปรับรูปในหน้าต่างรายละเอียดให้เป็น bg-contain (พอดีกรอบ) -->
+                        <div id="dlgImg" class="absolute inset-0 bg-contain bg-center bg-no-repeat opacity-80"></div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                         <div class="absolute bottom-4 left-4 right-4 text-center">
                             <div id="dlgLife" class="text-xs text-gray-300 bg-black/60 backdrop-blur px-3 py-1 rounded-full inline-block border border-gray-700">
@@ -352,7 +381,7 @@
         </div>
     </dialog>
 
-    <!-- ✅ ===== DIALOG รายการโปรด (Favorites Modal) ===== -->
+    <!-- ===== DIALOG รายการโปรด (Favorites Modal) ===== -->
     <dialog id="favDlg" class="backdrop:backdrop-blur-sm z-50 w-full max-w-md bg-[#0a0a0a]">
         <div class="flex flex-col h-[70vh] md:h-[80vh]">
             <!-- Header -->
@@ -385,6 +414,18 @@
 
     <!-- ===== LOGIC SCRIPT ===== -->
     <script>
+        // ==========================================
+        // ⚙️ ลิงก์วิดีโอแนะนำ (ระบบจะสุ่มแสดงผล และดึงชื่อวิดีโอจริงให้อัตโนมัติ)
+        // คุณสามารถเพิ่ม/ลด ลิงก์ในนี้ได้เลยโดยใช้รูปแบบ https://youtu.be/...
+        // ==========================================
+        const YOUTUBE_LINKS = [
+            "https://youtu.be/DmjtWKlim24",
+            "https://youtu.be/e1KqQ-8r4_k",
+            "https://youtu.be/QzI12A5H_Jc",
+            "https://youtu.be/B_47JvXhGyk",
+            "https://youtu.be/wYx7XQe7s14"
+        ];
+
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSRc8qukfikf3ZdqRzFBI8d2dMA3zGsT6TqjRQcaCmrJXeOVnVZ1ivqM8H6pCjXHA/pub?output=csv";
 
         /* Refs */
@@ -434,6 +475,82 @@
         // ✅ โหลดรายการโปรดจาก Local Storage
         let favorites = JSON.parse(localStorage.getItem('favPersons')) || [];
 
+        // ฟังก์ชันสุ่ม Array (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        /* ===== ระบบดึงวิดีโอจาก Link ===== */
+        async function loadPlaylist() {
+            const slider = document.getElementById('playlistSlider');
+            
+            // สุ่มลำดับวิดีโอ
+            const shuffledLinks = shuffleArray([...YOUTUBE_LINKS]);
+            
+            // ดึงข้อมูลชื่อจริงของวิดีโอจาก YouTube API อย่างเป็นทางการ
+            const fetchPromises = shuffledLinks.map(async (url) => {
+                const vidId = getYoutubeId(url);
+                if (!vidId) return null;
+                
+                try {
+                    const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${vidId}&format=json`);
+                    const data = await res.json();
+                    return { id: vidId, title: data.title };
+                } catch (e) {
+                    return { id: vidId, title: "วิดีโอแนะนำ" }; // กรณีดึงข้อมูลไม่สำเร็จ
+                }
+            });
+
+            // รอโหลดข้อมูลทั้งหมดเสร็จสิ้น
+            const results = await Promise.all(fetchPromises);
+            const videosToRender = results.filter(v => v !== null);
+
+            renderPlaylist(videosToRender);
+        }
+
+        function renderPlaylist(videos) {
+            const slider = document.getElementById('playlistSlider');
+            slider.innerHTML = '';
+            
+            if(videos.length === 0) {
+                slider.innerHTML = '<span class="text-gray-500">ไม่มีวิดีโอแนะนำ</span>';
+                return;
+            }
+
+            videos.forEach(vid => {
+                const card = document.createElement('div');
+                // กำหนดความกว้างเพื่อให้แสดงประมาณ 3 คลิปบนจอ Desktop และเลื่อนสแนป
+                card.className = "flex-none w-[75vw] sm:w-[45vw] md:w-[31%] aspect-video bg-[#0a0a0a] rounded border border-[#d4af37]/30 relative group cursor-pointer overflow-hidden snap-start shrink-0 shadow-lg";
+                card.innerHTML = `
+                    <img src="https://img.youtube.com/vi/${vid.id}/hqdefault.jpg" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                    <div class="absolute inset-0 bg-black/30 group-hover:bg-transparent transition-colors duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fa-brands fa-youtube text-4xl md:text-5xl text-white/80 group-hover:text-red-600 transition-colors drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] scale-90 group-hover:scale-110 duration-300"></i>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-2 md:p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                        <h4 class="text-[#f4e4bc] text-xs md:text-sm font-bold truncate drop-shadow-md font-serif">${vid.title}</h4>
+                    </div>
+                `;
+                
+                // เมื่อคลิกให้เปิดวิดีโอด้วย Dialog (Video Overlay)
+                card.onclick = () => {
+                    youtubeIframe.src = `https://www.youtube.com/embed/${vid.id}?autoplay=1&rel=0&playsinline=1`;
+                    videoOverlay.classList.add('active');
+                };
+                
+                slider.appendChild(card);
+            });
+        }
+
+
         /* Utils */
         function wikiThumbURL(title, width=600, lang='th'){
             const norm = (title||'').trim().replace(/\s+/g, '_');
@@ -467,7 +584,10 @@
             
             const t2src = await fetchSummaryThumb(it.name, 'th');
             const t2 = await preloadImage(t2src);
-            return t2 || 'https://via.placeholder.com/600x800/0a0a0a/333333?text=No+Image';
+            
+            // เปลี่ยนจาก via.placeholder.com เป็น Inline SVG เพื่อแก้ปัญหาการเชื่อมต่อ (ERR_CONNECTION_CLOSED)
+            const fallbackSvg = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'%3E%3Crect fill='%230a0a0a' width='600' height='800'/%3E%3Ctext fill='%23444444' font-family='sans-serif' font-size='30' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+            return t2 || fallbackSvg;
         }
 
         /* CSV */
@@ -549,17 +669,19 @@
 
             list.forEach((it, index) => {
                 const card = document.createElement('div');
-                card.className = "card-wrapper group cursor-pointer h-32 md:h-56";
+                // ✅ นำความสูงที่ล็อกไว้ออก (h-32 md:h-56)
+                card.className = "card-wrapper group cursor-pointer w-full";
                 card.style.animation = `fadePop 0.4s ease-out forwards ${index * 0.02}s`;
                 card.style.opacity = '0';
 
                 // Check if visited (for visual effect)
+                // ✅ นำ h-full ออก และเพิ่ม min-h ป้องกันการ์ดยุบตัวก่อนรูปโหลดเสร็จ
                 card.innerHTML = `
-                    <div class="card-inner w-full h-full relative">
+                    <div class="card-inner w-full relative min-h-[120px] md:min-h-[160px]">
                         <div class="w-full h-full bg-gray-800 animate-pulse absolute top-0 left-0 -z-10"></div>
-                        <div class="card-img-container w-full h-full"></div>
+                        <div class="card-img-container w-full"></div>
                         
-                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 pointer-events-none"></div>
                         
                         <!-- Show tiny heart on card if favorite -->
                         ${favorites.includes(it.name) ? '<div class="absolute top-2 right-2 text-red-500 text-[10px] z-10"><i class="fa-solid fa-heart shadow-sm drop-shadow-md"></i></div>' : ''}
@@ -836,6 +958,8 @@
             if(CURRENT_PAGE < tp) { CURRENT_PAGE++; renderPage(); window.scrollTo({top:0, behavior:'smooth'}); }
         });
 
+        // ลำดับการเรียกใช้งานตอนเริ่มต้น
+        loadPlaylist();
         loadCSV();
 
     </script>
