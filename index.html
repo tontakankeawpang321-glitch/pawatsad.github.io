@@ -923,9 +923,11 @@
                 return;
             }
 
-            videos.forEach(vid => {
+            // ✅ เก็บ ID ทั้งหมดเพื่อสร้างเป็นคิว Playlist ให้เล่นต่อเนื่องอัตโนมัติ
+            const allVidIds = videos.map(v => v.id);
+
+            videos.forEach((vid, index) => {
                 const card = document.createElement('div');
-                // กำหนดความกว้างเพื่อให้แสดงประมาณ 3 คลิปบนจอ Desktop และเลื่อนสแนป
                 card.className = "flex-none w-[75vw] sm:w-[45vw] md:w-[31%] aspect-video bg-[#0a0a0a] rounded border border-[#d4af37]/30 relative group cursor-pointer overflow-hidden snap-start shrink-0 shadow-lg";
                 card.innerHTML = `
                     <img src="https://img.youtube.com/vi/${vid.id}/hqdefault.jpg" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300">
@@ -940,7 +942,12 @@
                 
                 // เมื่อคลิกให้เปิดวิดีโอด้วย Dialog (Video Overlay)
                 card.onclick = () => {
-                    youtubeIframe.src = `https://www.youtube.com/embed/${vid.id}?autoplay=1&rel=0&playsinline=1`;
+                    // ✅ สร้างรายชื่อวิดีโอถัดไป (นำวิดีโอที่เหลือมาต่อกันเป็น Playlist และวนกลับไปคลิปแรกสุดเมื่อเล่นจบ)
+                    const nextVids = allVidIds.slice(index + 1);
+                    const loopVids = nextVids.concat(allVidIds.slice(0, index)); 
+                    const playlistStr = loopVids.length > 0 ? `&playlist=${loopVids.join(',')}` : '';
+
+                    youtubeIframe.src = `https://www.youtube.com/embed/${vid.id}?autoplay=1&rel=0&playsinline=1${playlistStr}`;
                     videoOverlay.classList.add('active');
                 };
                 
