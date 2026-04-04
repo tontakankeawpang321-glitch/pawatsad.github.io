@@ -961,6 +961,7 @@
             const norm = (title||'').trim().replace(/\s+/g, '_');
             return `https://${lang}.wikipedia.org/api/rest_v1/page/thumbnail/${encodeURIComponent(norm)}/${width}`;
         }
+        
         async function fetchSummaryThumb(title, lang='th'){
             const norm = (title||'').trim().replace(/\s+/g, '_');
             try{
@@ -970,29 +971,46 @@
                 return json?.thumbnail?.source || null;
             }catch{ return null; }
         }
+        
         function preloadImage(src){
             return new Promise(resolve=>{
-                if(!src) return resolve(null);
+                if(!src || src.trim() === '') return resolve(null);
                 const img = new Image();
                 img.onload = ()=>resolve(src);
                 img.onerror = ()=>resolve(null);
                 img.src = src;
             });
         }
+        
+        // ✅ ปรับปรุงระบบโหลดรูปภาพให้ครอบคลุม "ทุกกรณี"
         async function resolveImageForItem(it){
-            if(it.image_url){
-                const ok1 = await preloadImage(it.image_url);
+            // กรณีที่ 1: ดึงจากลิงก์ที่ให้มาใน CSV (ถ้ามี)
+            if(it.image_url && it.image_url.trim() !== '') {
+                let url = it.image_url.trim();
+                if (url.startsWith('//')) url = 'https:' + url;
+                const ok1 = await preloadImage(url);
                 if(ok1) return ok1;
             }
+            
+            // กรณีที่ 2: ดึงภาพ Thumbnail จาก Wikipedia (ภาษาไทย)
             const t1 = await preloadImage(wikiThumbURL(it.name, 640, 'th'));
             if(t1) return t1;
             
             const t2src = await fetchSummaryThumb(it.name, 'th');
             const t2 = await preloadImage(t2src);
+            if(t2) return t2;
+
+            // กรณีที่ 3: ดึงภาพ Thumbnail จาก Wikipedia (ภาษาอังกฤษ) เผื่อเป็นบุคคลระดับโลก
+            const t3 = await preloadImage(wikiThumbURL(it.name, 640, 'en'));
+            if(t3) return t3;
+
+            const t4src = await fetchSummaryThumb(it.name, 'en');
+            const t4 = await preloadImage(t4src);
+            if(t4) return t4;
             
-            // เปลี่ยนจาก via.placeholder.com เป็น Inline SVG เพื่อแก้ปัญหาการเชื่อมต่อ (ERR_CONNECTION_CLOSED)
+            // กรณีที่ 4: หากทุกวิธีด้านบนไม่สำเร็จ จะใช้ภาพสำรอง (SVG) ป้องกันปัญหาช่องโหว่ (ทุกกรณี)
             const fallbackSvg = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'%3E%3Crect fill='%230a0a0a' width='600' height='800'/%3E%3Ctext fill='%23444444' font-family='sans-serif' font-size='30' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-            return t2 || fallbackSvg;
+            return fallbackSvg;
         }
 
         /* CSV */
@@ -1264,15 +1282,26 @@
                 dlgImg.style.backgroundImage = `url('${src}')`;
             });
 
-            // PDF Button
-            if(it.pdf_url) {
-                dlgPdf.href = it.pdf_url;
-                dlgPdf.classList.remove('hidden');
-                dlgPdf.classList.add('flex');
+            // ✅ ปรับปรุงปุ่ม PDF / Wikipedia ให้รองรับลิงก์ทุกรูปแบบ และมีระบบ Fallback อัตโนมัติ (ทุกกรณี)
+            let wikiUrl = "";
+            if (it.pdf_url && it.pdf_url.trim() !== '') {
+                // กรณีมีลิงก์อยู่แล้ว จะตรวจสอบและจัดฟอร์แมตให้ปลอดภัย
+                wikiUrl = it.pdf_url.trim();
+                if (wikiUrl.startsWith('//')) {
+                    wikiUrl = 'https:' + wikiUrl;
+                } else if (!wikiUrl.startsWith('http')) {
+                    wikiUrl = 'https://' + wikiUrl;
+                }
             } else {
-                dlgPdf.classList.add('hidden');
-                dlgPdf.classList.remove('flex');
+                // กรณีไม่มีลิงก์ (ช่องว่าง) ให้สร้างลิงก์ Wikipedia จากชื่อโดยอัตโนมัติ
+                const namePath = encodeURIComponent((it.name || '').trim().replace(/\s+/g, '_'));
+                wikiUrl = `https://th.wikipedia.org/wiki/${namePath}`;
             }
+
+            // นำลิงก์ที่ถูกตรวจสอบแล้วไปผูกกับปุ่ม "ฉบับ วิกิพีเดีย" และเปิดให้แสดงผลเสมอ
+            dlgPdf.href = wikiUrl;
+            dlgPdf.classList.remove('hidden');
+            dlgPdf.classList.add('flex');
 
             // Cartoon Button
             if(it.url) {
