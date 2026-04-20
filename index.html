@@ -212,7 +212,7 @@
     <script>
         // กำหนด URL แยกกันระหว่างบุคคล และ ประวัติศาสตร์โลก
         const CSV_PERSONS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx8wXxee_aJWZYdCWC97p3MCMHmWu47xK6SLQbpULd7a8zBxQm7uQbzSwIVB4meY6cWhJHkjRkAtMS/pub?output=csv";
-        const CSV_WORLD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnb7mJzl19itVoRpcwzoElYWPpftPBOnUwltYiTpLvAktND0X0tNSzMS1RJjgjZA05nYz_t8yXyfya/pub?output=csv"; // ใส่ URL ของประวัติศาสตร์โลกที่นี่
+        const CSV_WORLD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnb7mJzl19itVoRpcwzoElYWPpftPBOnUwltYiTpLvAktND0X0tNSzMS1RJjgjZA05nYz_t8yXyfya/pub?output=csv";
         
         let DATA_PERSONS = [];
         let DATA_WORLD = [];
@@ -229,7 +229,6 @@
             loader.style.display = 'flex';
             
             try {
-                // โหลดข้อมูลทั้งสองแหล่งพร้อมกัน
                 const [resPersons, resWorld] = await Promise.all([
                     fetch(CSV_PERSONS_URL + "&t=" + Date.now()),
                     fetch(CSV_WORLD_URL + "&t=" + Date.now())
@@ -294,13 +293,11 @@
             histList.innerHTML = '';
             worldList.innerHTML = '';
 
-            // หมวดหมู่บุคคล
             Object.keys(CATEGORIES_PERSONS).sort().forEach(cat => {
                 const btn = createCategoryBtn(cat);
                 histList.appendChild(btn);
             });
 
-            // หมวดหมู่โลก
             Object.keys(CATEGORIES_WORLD).sort().forEach(cat => {
                 const btn = createCategoryBtn(cat);
                 worldList.appendChild(btn);
@@ -349,7 +346,6 @@
                 return;
             }
 
-            // แยกการแสดงผลตาม View
             if (CURRENT_VIEW === 'all' || CURRENT_VIEW === 'บุคคล') {
                 renderDataSet(wrapper, CATEGORIES_PERSONS, "บุคคลสำคัญ");
             }
@@ -418,6 +414,9 @@
             const slider = document.createElement('div');
             slider.className = "flex overflow-x-auto gap-4 no-scrollbar px-4 snap-x";
             
+            // รูป Placeholder กรณี YouTube โหลดรูปไม่ขึ้น (404)
+            const fallbackImg = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect fill='%23111' width='320' height='180'/%3E%3Ctext fill='%23444' font-family='sans-serif' font-size='12' x='50%25' y='50%25' text-anchor='middle'%3EThumbnail Not Found%3C/text%3E%3C/svg%3E";
+
             items.forEach((item) => {
                 const vidId = getYTId(item.url);
                 if (!vidId) return;
@@ -430,7 +429,9 @@
 
                 card.innerHTML = `
                     <div class="relative aspect-video bg-black rounded-lg border border-[#d4af37]/20 overflow-hidden group-hover:border-[#d4af37] transition-all shadow-md">
-                        <img src="https://img.youtube.com/vi/${vidId}/mqdefault.jpg" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                        <img src="https://i.ytimg.com/vi/${vidId}/hqdefault.jpg" 
+                             onerror="this.onerror=null;this.src='${fallbackImg}';" 
+                             class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
                         <div class="absolute inset-0 flex items-center justify-center bg-black/20">
                             <i class="fa-solid fa-play text-white text-2xl drop-shadow-lg opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all"></i>
                         </div>
@@ -481,11 +482,24 @@
             overlay.classList.remove('active');
         }
 
+        // ปรับปรุงฟังก์ชันให้รองรับ Shorts และมีความแม่นยำสูงขึ้น
         function getYTId(url) {
             if (!url) return null;
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            url = url.trim();
+            let id = null;
+
+            // ตรวจสอบลิงก์แบบ Shorts
+            if (url.includes('/shorts/')) {
+                id = url.split('/shorts/')[1]?.split(/[?&]/)[0];
+            } else {
+                // Regex มาตรฐานสำหรับวิดีโอ YouTube ทั่วไป
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url.match(regExp);
+                id = match ? match[2] : null;
+            }
+
+            // รหัสต้องมีความยาว 11 ตัวอักษรเท่านั้น
+            return (id && id.substring(0, 11).length === 11) ? id.substring(0, 11) : null;
         }
 
         function toggleFav(e, item) {
